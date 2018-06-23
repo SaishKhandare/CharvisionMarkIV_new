@@ -47,17 +47,23 @@ public class MainActivity extends AppCompatActivity {
     Button capture;
     TextView textview;
     Bitmap picture;
+    Bitmap cropped;
 
-    String msg, data,textword = "";
+    String msg, data, textword = "";
 
     int nametrap = 0;
     int totaltrap = 0;
     int istrapedname = 0;
     int istrapedtotal = 0;
+    int result = 0; // used in condition check function
 
-    String totalv="";
-    String namev="";
+    String totalv = "";
+    String namev = "";
 
+
+
+    String[] namearr = new String[]{"name","m/s.","m/s","name:"};
+    String[] totalarr = new String[]{"total"};
 
 
     BatchAnnotateImagesRequest batchRequest;
@@ -81,6 +87,11 @@ public class MainActivity extends AppCompatActivity {
                 Drawable mydraw = getResources().getDrawable(R.drawable.bill2);
                 picture = ((BitmapDrawable) mydraw).getBitmap();
                 imgview.setImageBitmap(picture);
+
+                int height = ((int) (picture.getHeight() * 0.05));
+                int width = ((int) (picture.getWidth() * 0.5));
+                cropped  = Bitmap.createBitmap(picture,38,216,width,height);
+                imgview.setImageBitmap(cropped);
             }
         });
 
@@ -106,7 +117,8 @@ public class MainActivity extends AppCompatActivity {
 
                 //Encoding the Image.
                 final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-                picture.compress(Bitmap.CompressFormat.JPEG, 100, byteStream);
+                //initially picture is to be compressed
+                cropped.compress(Bitmap.CompressFormat.JPEG, 100, byteStream);
                 String base64Data = Base64.encodeToString(byteStream.toByteArray(), Base64.URL_SAFE);
 
 
@@ -137,48 +149,36 @@ public class MainActivity extends AppCompatActivity {
 
                         //using Textannotation
                         final TextAnnotation text = batchResponse.getResponses().get(0).getFullTextAnnotation();
-                        for(Page page : text.getPages())
-                        {
-                            for(Block block : page.getBlocks())
-                            {
+                        for (Page page : text.getPages()) {
+                            for (Block block : page.getBlocks()) {
                                 data = data + "\n new_block_start";
 
-                                for(Paragraph para : block.getParagraphs())
-                                {
+                                for (Paragraph para : block.getParagraphs()) {
                                     data = data + "\n new_para_start";
-                                    for(Word word : para.getWords())
-                                    {
+                                    for (Word word : para.getWords()) {
 
-                                        for(Symbol symbol : word.getSymbols())
-                                        {
+                                        for (Symbol symbol : word.getSymbols()) {
                                             textword = textword + symbol.getText().toString();
                                         }
 
-                                        //trap for name:
-                                        if(nametrap >= 1)
-                                        {
-                                            namev = namev +" | "+ textword;
-                                            nametrap = nametrap-1;
+                                        //trap for name:-------------------------------------------
+                                        if (nametrap >= 1) {
+                                            namev = namev + " | " + textword;
+                                            nametrap = nametrap - 1;
                                         }
-                                        if(textword.trim().toLowerCase().equals("name"))
-                                        {
-                                            nametrap = 3;
-                                            data = data + "\ntrapped name here \n";
-                                            istrapedname = 1;
+                                        //sets the trap for name:
+                                        name_trap(textword);
+                                        // trap for name ends:-------------------------------------
+
+                                        // trap for total:-----------------------------------------
+                                        if (totaltrap >= 1) {
+                                            totalv = totalv + "|" + textword;
+                                            totaltrap = totaltrap - 1;
                                         }
-                                        // trap for name ends:
-                                        // trap for total:
-                                        if(totaltrap >= 1)
-                                        {
-                                            totalv = totalv + "|" +textword;
-                                            totaltrap = totaltrap-1;
-                                        }
-                                        if(textword.trim().toLowerCase().equals("total"))
-                                        {
-                                            totaltrap = 2;
-                                            data = data + "\ntrapped total here \n";
-                                            istrapedtotal =1;
-                                        }
+                                        //sets trap for total
+                                        total_trap(textword);
+                                        //Trap for total ends here---------------------------------
+
                                         data = data + "\n\n";
                                         data = data + textword + word.getBoundingBox();
                                         data = data + "\n";
@@ -186,33 +186,11 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                 }
                             }
-
                         }
 
-                        //using listing responses.
-                        /**
-                        List<AnnotateImageResponse> responses =batchResponse.getResponses();
-                        for(AnnotateImageResponse res : responses)
-                        {
-                            for(EntityAnnotation annotate : res.getTextAnnotations() )
-                            {
-                                data = data + "DESCRIPTION: \n\n";
-                                data = data + annotate.getDescription();
-                                data = data + "BOUNDINGS: \n\n";
-                                data = data + annotate.getBoundingPoly();
-                            }
-                        }
-
-                         **/
-                       // data = data + "TEXT: \n\n";
-                       // data = data + text.getText().toString();
-                        data = data +"ABOVE ARE THE RESULTS";
-                        data = data + "\n Recipient:" + namev;
-                        data = data + "\n TOTAL" + totalv;
-                        data = (data + "\n NAME TRAP : " + istrapedname);
-                        data = (data + "\n TOTAL TRAP : " + istrapedtotal);
-
-                        textview.setText(data);
+                        //finalyse data:----------------------------------------------------------------
+                        finalise_data();
+                        //-------------------------------------------------------------------------------
 
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -222,7 +200,173 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
     }
+
+
+    //FUNCTION TO TRAP NAME uses name_condition
+    public void name_trap(String textword) {
+        if(istrapedname == 0)
+        {
+            if (name_condition(textword)) {
+                nametrap = 3;
+                data = data + "\ntrapped name here \n";
+                istrapedname = 1;
+            }
+        }
+    }
+
+    //FUNCTION TO TRAP TOTAL uses total_condition
+    public void total_trap(String textword) {
+
+        if(istrapedtotal==0)
+        {
+            if (total_condition(textword)) {
+                totaltrap = 2;
+                data = data + "\ntrapped total here \n";
+                istrapedtotal = 1;
+            }
+        }
+    }
+
+
+    //FUNCTION FOR NAME CONDITION to Iterate through name_arr
+    public boolean name_condition(String textword)
+    {
+        for(int h=0;h < namearr.length;h++)
+        {
+            if(textword.trim().toLowerCase().equals(namearr[h]))
+            {
+                result=1;
+            }
+        }
+        if(result==1)
+        {
+            result=0;
+            return true;
+        }
+        else
+        {
+            result=0;
+            return false;
+        }
+    }
+
+    //FUNCTION FOR TOTAL CONDITION to Iterate through total_arr
+    public boolean total_condition(String textword)
+    {
+        for(int h=0;h < totalarr.length;h++)
+        {
+            if(textword.trim().toLowerCase().equals(totalarr[h]))
+            {
+                result=1;
+            }
+        }
+        if(result==1)
+        {
+            result=0;
+            return true;
+        }
+        else
+        {
+            result=0;
+            return false;
+        }
+    }
+
+    //FUNCTION TO finalisedata
+    public void finalise_data() {
+        data = data + "ABOVE ARE THE RESULTS";
+        data = data + "\n Recipient:" + namev;
+        data = data + "\n TOTAL" + totalv;
+        data = (data + "\n NAME TRAP : " + istrapedname);
+        data = (data + "\n TOTAL TRAP : " + istrapedtotal);
+        textview.setText(data);
+    }
+
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//using listing responses.
+/**
+ List<AnnotateImageResponse> responses =batchResponse.getResponses();
+ for(AnnotateImageResponse res : responses)
+ {
+ for(EntityAnnotation annotate : res.getTextAnnotations() )
+ {
+ data = data + "DESCRIPTION: \n\n";
+ data = data + annotate.getDescription();
+ data = data + "BOUNDINGS: \n\n";
+ data = data + annotate.getBoundingPoly();
+ }
+ }
+
+ **/
