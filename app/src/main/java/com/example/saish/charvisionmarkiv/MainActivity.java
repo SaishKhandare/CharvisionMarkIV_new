@@ -10,6 +10,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -50,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     Bitmap cropped;
 
     String msg, data, textword = "";
+    String density= "";
 
     int nametrap = 0;
     int totaltrap = 0;
@@ -84,14 +86,18 @@ public class MainActivity extends AppCompatActivity {
         capture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Drawable mydraw = getResources().getDrawable(R.drawable.bill2);
+                Drawable mydraw = getResources().getDrawable(R.drawable.pay1);
                 picture = ((BitmapDrawable) mydraw).getBitmap();
+               // int height = ((int) (picture.getHeight() * 0.05));
+               // int width = ((int) (picture.getWidth() * 0.5));
+               // cropped  = Bitmap.createBitmap(picture,38,216,width,height);
+                //imgview.setImageBitmap(cropped);
+                density = density + picture.getByteCount();
+                Log.e("Density::::::", "onClick:  " + density );
+                //This function checks the size and adjusts it to requried size
+                check_size(picture);
                 imgview.setImageBitmap(picture);
 
-                int height = ((int) (picture.getHeight() * 0.05));
-                int width = ((int) (picture.getWidth() * 0.5));
-                cropped  = Bitmap.createBitmap(picture,38,216,width,height);
-                imgview.setImageBitmap(cropped);
             }
         });
 
@@ -118,8 +124,8 @@ public class MainActivity extends AppCompatActivity {
                 //Encoding the Image.
                 final ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
                 //initially picture is to be compressed
-                cropped.compress(Bitmap.CompressFormat.JPEG, 100, byteStream);
-                String base64Data = Base64.encodeToString(byteStream.toByteArray(), Base64.URL_SAFE);
+                picture.compress(Bitmap.CompressFormat.JPEG, 100, byteStream);
+               // String base64Data = Base64.encodeToString(byteStream.toByteArray(), Base64.URL_SAFE);
 
 
                 Image inputImage = new Image();
@@ -281,6 +287,20 @@ public class MainActivity extends AppCompatActivity {
         data = (data + "\n NAME TRAP : " + istrapedname);
         data = (data + "\n TOTAL TRAP : " + istrapedtotal);
         textview.setText(data);
+    }
+
+    //FUNCTION TO GET APPROPRIATE SIZE OF IMAGE
+    public void check_size(Bitmap img)
+    {
+        while (img.getByteCount() > 4000000)
+        {
+            density = "";
+            density = density + img.getByteCount();
+            Log.e("NEEDS REDUCTION:", "check_size:" + density );
+            //try changing the height and width in createScaledBitmap function.
+            img = img.createScaledBitmap(img,img.getWidth(),img.getHeight(),true);
+        }
+        picture = img;
     }
 
 }
