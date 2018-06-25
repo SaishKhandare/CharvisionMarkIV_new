@@ -61,12 +61,19 @@ public class MainActivity extends AppCompatActivity {
     int istrapedtotal = 0;
     int result = 0; // used in condition check function
 
+
+    //this variables will contain the left-bottom y line a bit lover than date.
+    int dateY;
+    int dateX;
+
+
+
     String totalv = "";
     String namev = "";
 
 
 
-    String[] namearr = new String[]{"name","m/s.","m/s","name:"};
+    String[] namearr = new String[]{"date"};
     String[] totalarr = new String[]{"total"};
 
 
@@ -108,6 +115,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 textview.setText("done");
 
+
+                //IMPORTANT_CORE_SECTION:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
                 //checking internet permission
                 if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED) {
                     textview.setText("got internet connection!");
@@ -174,8 +183,14 @@ public class MainActivity extends AppCompatActivity {
                                             namev = namev + " | " + textword;
                                             nametrap = nametrap - 1;
                                         }
-                                        //sets the trap for name:
+                                        //sets the trap for date:
                                         name_trap(textword);
+                                        if(nametrap >=1 && istrapedname == 0)
+                                        {
+                                            //This function will create box to be cropped for CUSTOMER NAME:
+                                           Location.createNameBox(word);
+                                            istrapedname = 1;
+                                        }
                                         // trap for name ends:-------------------------------------
 
                                         // trap for total:-----------------------------------------
@@ -218,7 +233,6 @@ public class MainActivity extends AppCompatActivity {
             if (name_condition(textword)) {
                 nametrap = 3;
                 data = data + "\ntrapped name here \n";
-                istrapedname = 1;
             }
         }
     }
@@ -285,10 +299,20 @@ public class MainActivity extends AppCompatActivity {
     //FUNCTION TO finalisedata
     public void finalise_data() {
         data = data + "ABOVE ARE THE RESULTS";
-        data = data + "\n Recipient:" + namev;
+        data = data + "\n NAME:" + namev;
         data = data + "\n TOTAL" + totalv;
         data = (data + "\n NAME TRAP : " + istrapedname);
         data = (data + "\n TOTAL TRAP : " + istrapedtotal);
+        data =  data + "Date's x cordinate " + dateX;
+        data =  data + "Date's y cordinate " + dateY;
+        if(istrapedname ==1)
+        {
+            data = data + "X:"+CropBox.DATE_X + "Y:"+CropBox.DATE_Y+ "height" + CropBox.DATE_HEIGHT + "widht" + CropBox.DATE_WIDTH;
+        }
+        else
+        {
+           data = data + "ERROR CREATING CropBox for CUSTOMER NAME:";
+        }
         textview.setText(data);
     }
 
