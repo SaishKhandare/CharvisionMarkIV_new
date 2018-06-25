@@ -221,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-            }
+            }//ONCLICK'S END
         });
     }
 
@@ -308,6 +308,9 @@ public class MainActivity extends AppCompatActivity {
         if(istrapedname ==1)
         {
             data = data + "X:"+CropBox.DATE_X + "Y:"+CropBox.DATE_Y+ "height" + CropBox.DATE_HEIGHT + "widht" + CropBox.DATE_WIDTH;
+            cropped = Bitmap.createBitmap(picture,CropBox.DATE_X,CropBox.DATE_Y,CropBox.DATE_WIDTH,CropBox.DATE_HEIGHT);
+            imgview.setImageBitmap(cropped);
+            data = data +"\n\n::::::::::::CROPPING NAME BOX::::::::::::::::\n\n"+ "\n\n" + GoogleCloudVision.run_OCR(this,cropped);
         }
         else
         {
