@@ -267,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
             if(textword.trim().toLowerCase().equals(totalarr[h]))
             {
                 result=1;
+
             }
         }
         if(result==1)
