@@ -39,6 +39,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import static android.graphics.Bitmap.createScaledBitmap;
+
 public class MainActivity extends AppCompatActivity {
 
     //reference website https://code.tutsplus.com/tutorials/how-to-use-google-cloud-machine-learning-services-for-android--cms-28630
@@ -48,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     Button capture;
     TextView textview;
     Bitmap picture;
-    Bitmap cropped;
+    Bitmap cropped,reduceimg;
 
     String msg, data, textword = "";
     String density= "";
@@ -94,8 +96,8 @@ public class MainActivity extends AppCompatActivity {
                 //imgview.setImageBitmap(cropped);
                 density = density + picture.getByteCount();
                 Log.e("Density::::::", "onClick:  " + density );
-                //This function checks the size and adjusts it to requried size
-                check_size(picture);
+                //This function checks the size and adjusts it to requried size of < 4 million bytes.
+                check_size();
                 imgview.setImageBitmap(picture);
 
             }
@@ -290,17 +292,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //FUNCTION TO GET APPROPRIATE SIZE OF IMAGE
-    public void check_size(Bitmap img)
+    public void check_size()
     {
-        while (img.getByteCount() > 4000000)
+        if (picture.getByteCount() > 4000000)
         {
-            density = "";
-            density = density + img.getByteCount();
-            Log.e("NEEDS REDUCTION:", "check_size:" + density );
             //try changing the height and width in createScaledBitmap function.
-            img = img.createScaledBitmap(img,img.getWidth(),img.getHeight(),true);
+            picture = createScaledBitmap(picture, ((int) (picture.getWidth() * 0.4)), ((int) (picture.getHeight() * 0.4)),true);
+            density = "";
+            density = density + picture.getByteCount();
+            Log.e("NEEDS REDUCTION:", "check_size:" + density );
+            check_size();
         }
-        picture = img;
     }
 
 }
